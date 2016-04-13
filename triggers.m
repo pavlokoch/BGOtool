@@ -1,35 +1,33 @@
-function varargout = BGOtool_v1(varargin)
-% BGOTOOL_V1 MATLAB code for BGOtool_v1.fig
-%      BGOTOOL_V1, by itself, creates a new BGOTOOL_V1 or raises the existing
-%      singleton*.
+function varargout = triggers(varargin)
+% triggers MATLAB code for triggers.fig
 %
-%      H = BGOTOOL_V1 returns the handle to a new BGOTOOL_V1 or the handle to
+%      H = triggers returns the handle to a new triggers or the handle to
 %      the existing singleton*.
 %
-%      BGOTOOL_V1('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in BGOTOOL_V1.M with the given input arguments.
+%      triggers('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in triggers.M with the given input arguments.
 %
-%      BGOTOOL_V1('Property','Value',...) creates a new BGOTOOL_V1 or raises the
+%      triggers('Property','Value',...) creates a new triggers or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before BGOtool_v1_OpeningFcn gets called.  An
+%      applied to the GUI before triggers_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to BGOtool_v1_OpeningFcn via varargin.
+%      stop.  All inputs are passed to triggers_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help BGOtool_v1
+% Edit the above text to modify the response to help triggers
 
-% Last Modified by GUIDE v2.5 08-Apr-2016 14:45:36
+% Last Modified by GUIDE v2.5 12-Apr-2016 11:53:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @BGOtool_v1_OpeningFcn, ...
-                   'gui_OutputFcn',  @BGOtool_v1_OutputFcn, ...
+                   'gui_OpeningFcn', @triggers_OpeningFcn, ...
+                   'gui_OutputFcn',  @triggers_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,13 +42,13 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before BGOtool_v1 is made visible.
-function BGOtool_v1_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before triggers is made visible.
+function triggers_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to BGOtool_v1 (see VARARGIN)
+% varargin   command line arguments to triggers (see VARARGIN)
 
 % get file list
 handles.files = dir('*.dat');
@@ -63,8 +61,9 @@ handles.tau = 0.3; %mus
 % choose verbosity level
 % 0 - report everything 
 % 1 - exclude tables from reports
+% 2 - only triggers
+handles.verbosity = 2;
 
-handles.verbosity = 1;
 handles.min_energy_channel = 0;
 handles.max_energy_channel = 4095;
 
@@ -73,11 +72,6 @@ handles.HED_STW_D_1 = 300; %mus, short window 1
 handles.HED_STW_D_2 = 1000; %mus, short window 2
 handles.HED_STW_D_3 = 3000; %mus, short window 3
 handles.HED_LTW_D = 25000; %mus, long window 
-
-handles.BGO_Short_Threshold_1 = 1; % enable window 
-handles.BGO_Short_Threshold_1 = 1; % enable window
-handles.BGO_Short_Threshold_1 = 1; % enable window
-handles.BGO_Short_Threshold_1 = 1; % enable window
 
 % Vars for accepted counts algorithm
 % Accepted Counts may be required to satisfy any of the following criteria: 
@@ -91,7 +85,7 @@ handles.HED_LTW_THR_L = 0; %
 handles.HED_LTW_THR_U = 4095; % 
 handles.HED_LTW_AC_T = 0; % 255 disables the algorithm for long window
 
-% Choose default command line output for BGOtool_v1
+% Choose default command line output for triggers
 handles.output = hObject;
 
 % Update handles structure
@@ -100,12 +94,12 @@ guidata(hObject, handles);
 %init context menu for lines, axes, etc.
 init_contextmenu(handles);
 
-% UIWAIT makes BGOtool_v1 wait for user response (see UIRESUME)
+% UIWAIT makes triggers wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = BGOtool_v1_OutputFcn(hObject, eventdata, handles) 
+function varargout = triggers_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -178,23 +172,27 @@ handles.DM2.errors = {'DM2 errors:'};
 % --------- process and plot -------------
 
 % Preliminary analysis
+if handles.verbosity < 2
     handles.DAU.messages{end+1} = ['Analysis of ',handles.files(selected_item(i)).name];
+end
 
 % energy range 0 - 4096
-if sum(energy < 0 | energy > 4095)
+if sum(energy < 0 | energy > 4095) && handles.verbosity < 2
      handles.DAU.warnings{end+1} = 'Energy out of range (0-4095).';
 end
 
 % check for zero energy
-if sum(energy==0)
+if sum(energy==0) && handles.verbosity < 2
     handles.DAU.warnings{end+1} = ['Zero energy detected in ', num2str(sum(energy==0),'%3.0f'), ' SCDPs.'];
 end
 
 % fraction of Fast/OVF events
+if  handles.verbosity < 2
     handles.DAU.messages{end+1} = ['Fraction of Fast/Valley events ', num2str(100*sum(flag==1)/numel(flag),'%2.2f'),'%'];
-
+end
+    
 % check for continuous operation mode
-if numel(find(flag == 3)),
+if numel(find(flag == 3)) && handles.verbosity < 2,
     handles.DAU.messages{end+1} = 'ADC sample detected (flag==3)! ';    
 end
 
@@ -202,10 +200,12 @@ end
 uniq_DMnum = unique(DMnum);
 
 % report
+if  handles.verbosity < 2,
 handles.DAU.messages{end+1} = ['DMs found: ',num2str(uniq_DMnum')];
+end
 
 % check if number of channels equals to three
-if numel(uniq_DMnum) ~= 3, 
+if numel(uniq_DMnum) ~= 3 && handles.verbosity < 2, 
     handles.DAU.warnings{end+1} = 'Missing DMs';
     set(handles.dm0_checkbox,'Value',sum(uniq_DMnum==0));
     set(handles.dm1_checkbox,'Value',sum(uniq_DMnum==1));
@@ -291,9 +291,6 @@ else
    arrayfun(@cla,findall(0,'type','axes')); 
 end    
 
-% print all messages to info panel
-report(handles);
-
 end     % end loop over all selected files
 
 % if collective analysis enabled on Options panel 
@@ -304,8 +301,12 @@ if get(handles.collective_checkbox,'Value')
            collective_data = sortrows(collective_data,4);
            % and fimally procees
            handles.DAU.messages{end+2} = '***** Collective data analysis: *****';
+           handles.DAU.warnings{end+1} = 'Please check each DM individually for time errors!';
            [status, handles.DAU] = process(handles, handles.DAU, collective_data, 'b');
            report(handles);
+else
+% just report
+report(handles);
 end
 
 function [status, DM] = process(handles, DM, data, color)
@@ -317,80 +318,17 @@ energy = data(:,1);
 flag = data(:,2);
 time = data(:,4);
 
-% get intervals in mus
-intervals_DM = diff(time);
-
-% report total observation time
-    DM.messages{end+1} = ['Total observation time: ',num2str(range(time)/1e6,'%3.0f'),' sec'];
-
-% check if time monotonously increases
-if sum(intervals_DM < 0),
+dt = diff(time);
+if sum(dt < 0),
     DM.errors{end+1} = 'TIME IS NOT MONOTONOUSLY INCREASING!';
     DM.errors{end+1} = 'Check following times:';
-    DM.errors{end+1} = num2str(time(intervals_DM<0),'%9.0f');
-    line(handles.data_axes,[time(intervals_DM<0),time(intervals_DM<0)],[0,handles.max_energy_channel])
+    DM.errors{end+1} = num2str(time(dt<0),'%9.0f');
+    line(handles.data_axes,[time(dt<0),time(dt<0)],[0,handles.max_energy_channel])
 end
 
-% ---oooOOO Timing OOOooo---
-% prepare histogram
-time_bin = 1000; % in mus
-% define edges
-edges = 0:time_bin:max(intervals_DM);
-% check if axes is hold
-if ~ishold(handles.timing_axes),hold(handles.timing_axes);end;
-% make histogram
-counts = histcounts(intervals_DM,edges); 
-% normalize
-counts = counts/sum(counts);
+% total observation time
+    DM.messages{end+1} = ['Total observation time: ',num2str(round(range(time))/1e6),' sec'];
 
-    [l,gof] = plot_time_intervals(handles, edges(1:end-1)+time_bin/2, counts, time_bin, color);
-    DM.messages{end+1} = ['Arrival rate (lambda): ',num2str(l*1e3,'%3.2f'),' counts/ms'];
-    DM.messages{end+1} = ['Poisson gof (rsquare): ',num2str(gof)];
-
-% ---oooOOO Deposited spectra OOOooo---
-% prepare histogram
-energy_bin = 100; % in channels    
-% define edges    
-edges = handles.min_energy_channel:energy_bin:handles.max_energy_channel;
-% make histogram
-counts = histcounts(energy,edges);
-% normalize
-counts = counts/sum(counts)/energy_bin;
-% check if axes is hold
-if ~ishold(handles.spectra_axes),hold(handles.spectra_axes);end;
-
-    plot_energy_spectra(handles, edges(1:end-1)+energy_bin/2, counts, energy_bin, range(time)/1e6, color)
-
-% ---oooOOO Primary spectra OOOooo---
-% only for test purposes. incident angel needs to be provided for correct
-% DRM usage. 
-% All DRMs binned from 0.01 to 100 MeV in 40 log bins. 
-energy_edges = [0.01 0.0125893 0.0158489 0.0199526 0.0251189 0.0316228 0.0398107 ... 
-         0.0501187 0.0630957 0.0794328 0.1 0.125893 0.158489 0.199526 0.251189 ...
-         0.316228 0.398107 0.501187 0.630957 0.794328 1 1.25893 1.58489 1.99526 ...
-         2.51189 3.16228 3.98107 5.01187 6.30957 7.94328 10 12.5893 15.8489 ... 
-         19.9526 25.1189 31.6228 39.8107 50.1187 63.0957 79.4328 100]; % in MeV
-
-% scale to channels (ref ASIM-UB-UBINT-RP-006 BGO DM spectroscopic tests.pdf page 13)
-% for a moment lets assume 0.01 - min energy channel and 100 hits max
-% energy channel
-ch_edges = energy_edges*(handles.max_energy_channel - handles.min_energy_channel)/max(energy_edges); 
-% create histogram
-counts = histcounts(energy,ch_edges);
-% load test DRM for 0 0 angles. Correct DRM should be loaded according to the incident
-% angles.
-load('test_drm.mat');
-% check if axes is hold
-if ~ishold(handles.primary_axes),hold(handles.primary_axes);end;
-% convert deposited to primary using DRM
-pr_spectra = deposited2primary(drm,counts);
-
-    stairs(handles.primary_axes, energy_edges(1:end-1), pr_spectra, color);
-
-set(handles.primary_axes,'XScale','log');    
-xlabel(handles.primary_axes, 'Energy [MeV]');
-ylabel(handles.primary_axes, 'Counts / channel / sec / cm^2');
-legend(handles.primary_axes,'Primary spectrum');
 
 % ---oooOOO Real-time data OOOooo---
 % check if axes is hold
@@ -404,34 +342,182 @@ if ~ishold(handles.data_axes),hold(handles.data_axes);end;
 xlabel(handles.data_axes, 'Time [\mus]');
 ylabel(handles.data_axes, 'Energy [ch]');
 
+% ---oooOOO TGF triggers OOOooo---
+% Trigger algorithm strictly accordingly to documentation.
+% Trigger flags down
+handles.BGO_Trigger_Flag_Short_1 = false([1,numel(time)]);
+handles.BGO_Trigger_Flag_Short_2 = false([1,numel(time)]);
+handles.BGO_Trigger_Flag_Short_3 = false([1,numel(time)]);
+handles.BGO_Trigger_Flag_Long = false([1,numel(time)]);
+
+% variables for in-flight background rate estimation
+% two backgrounds now implemented - for short and for long timewindows
+    TCP_counter_short = 0;
+    TCP_position_short = 0;
+    TCP_counter_long = 0;
+    TCP_position_long = 0;
+    buffSize = 8;
+    C_CircBuff_short = nan(1,buffSize);
+    C_CircBuff_long = nan(1,buffSize);
+
+    % number of selected modules to compensate for bg estimation
+    % if not complete mxgs data selected then extrapolate background rate
+    dm_num = numel(get(handles.file_listbox,'Value')) * sum(get(handles.dm0_checkbox,'Value') + ...
+                                                            get(handles.dm1_checkbox,'Value') + ...
+                                                            get(handles.dm2_checkbox,'Value'));
+    % for beginning let background be average count rate
+    bg_short = numel(time)/range(time)*1e3/dm_num*12; %counts/ms    
+    bg_long = numel(time)/range(time)*1e3/dm_num*12; %counts/ms    
+
+                                                        
+% include first record
+BGO_S_TS_Buffer(1) = time(1);
+BGO_L_TS_Buffer(1) = time(1);
+% loop over all entries starting from second element
+for i = 2:numel(energy)
+   
+    % only start if background is estimated
+    if bg_short > 0 || bg_long > 0
+   
+    % first short timewindow processing 
+    % check energy range
+   if energy(i) >= handles.HED_STW_THR_L && energy(i) <= handles.HED_STW_THR_U 
+       % if short window AC algorithm enabled
+       if handles.HED_STW_AC_T < 255 
+           if (time(i) - time(i-1) >= handles.HED_STW_AC_T)
+               BGO_S_TS_Buffer(end+1) = time(i);     
+           end
+       else
+           BGO_S_TS_Buffer(end+1) = time(i);
+       end
+       % check short window 1 for trigger (if enabled and enough elements in buffer)
+       if ~handles.HED_STW_D_1 == 0 && (numel(BGO_S_TS_Buffer) > trigger_lookups(bg_short, 1))
+          T_thresh = BGO_S_TS_Buffer(end - trigger_lookups(bg_short, 1));
+          T_delta = BGO_S_TS_Buffer(end) - T_thresh;
+            if T_delta <= handles.HED_STW_D_1, handles.BGO_Trigger_Flag_Short_1(i) = true;
+            end
+       end
+       % check short window 2 for trigger (if enabled and enough elements in buffer)
+       if ~handles.HED_STW_D_2 == 0 && (numel(BGO_S_TS_Buffer) > trigger_lookups(bg_short, 2))
+          T_thresh = BGO_S_TS_Buffer(end - trigger_lookups(bg_short, 1));
+          T_delta = BGO_S_TS_Buffer(end) - T_thresh;
+            if T_delta <= handles.HED_STW_D_2, handles.BGO_Trigger_Flag_Short_2(i) = true;
+            end
+       end
+       % check short window 3 for trigger (if enabled and enough elements in buffer)
+       if ~handles.HED_STW_D_3 == 0 && (numel(BGO_S_TS_Buffer) > trigger_lookups(bg_short, 3))
+          T_thresh = BGO_S_TS_Buffer(end - trigger_lookups(bg_short, 1));
+          T_delta = BGO_S_TS_Buffer(end) - T_thresh;
+            if T_delta <= handles.HED_STW_D_3, handles.BGO_Trigger_Flag_Short_3(i) = true;
+            end
+       end
+       
+   end
+   % long timewindow processing     
+   if energy(i) >= handles.HED_LTW_THR_L && energy(i) <= handles.HED_LTW_THR_U
+       % if long window AC algorithm enabled
+       if handles.HED_LTW_AC_T < 255 
+           if (time(i) - time(i-1) >= handles.HED_LTW_AC_T)
+               BGO_L_TS_Buffer(end+1) = time(i);
+           end
+       else
+           BGO_L_TS_Buffer(end+1) = time(i);
+       end
+      % check long window for trigger (if enabled and enough elements in buffer)
+       if ~handles.HED_LTW_D == 0 && (numel(BGO_L_TS_Buffer) > trigger_lookups(bg_long, 4))
+          T_thresh = BGO_L_TS_Buffer(end - trigger_lookups(bg_long, 1));
+          T_delta = BGO_L_TS_Buffer(end) - T_thresh;
+            if T_delta <= handles.HED_LTW_D, handles.BGO_Trigger_Flag_Long(i) = true;
+            end
+       end
+   end 
+   
+   % background ratemeter for short window
+   % if TCP arrived
+   if floor(BGO_S_TS_Buffer(end) / (1000000*(TCP_counter_short + 1))) > 0
+       TCP_counter_short = TCP_counter_short + 1;
+       C_CircBuff_short = [C_CircBuff_short(2:end) (numel(BGO_S_TS_Buffer) - TCP_position_short)]; % background per second
+       TCP_position_short = numel(BGO_S_TS_Buffer);  % save last TCP position
+       if TCP_counter_short >= 8  % if 8 seconds passed
+          % update background for the next second
+          % see formula in Data Acq Algorithm
+          S = sum(C_CircBuff_short);
+          ST = -sum(C_CircBuff_short(1:end-1).*[7:-1:1]);
+          bg_short = (42*S + 9*ST)/84/1e3;
+          % compensate for number of selected modules
+          bg_short = bg_short/dm_num*12;
+       end
+   end
+   % background ratemeter for long window
+   % if TCP arrived
+   if floor(BGO_L_TS_Buffer(end) / (1000000*(TCP_counter_long + 1))) > 0
+       TCP_counter_long = TCP_counter_long + 1;
+       C_CircBuff_long = [C_CircBuff_long(2:end) (numel(BGO_L_TS_Buffer) - TCP_position_long)]; % background per second
+       TCP_position_long = numel(BGO_L_TS_Buffer);  % save last TCP position
+       if TCP_counter_long >= 8  % if 8 seconds passed
+          % update background for the next second
+          % see formula in Data Acq Algorithm
+          S = sum(C_CircBuff_long);
+          ST = -sum(C_CircBuff_long(1:end-1).*[7:-1:1]);
+          bg_long = (42*S + 9*ST)/84/1e3;
+          % compensate for number of selected modules
+          bg_long = bg_long/dm_num*12;
+       end
+   end
+   
+   
+   % CZT-BGO Coincidence comes here
+   % ...
+    end % end if bg > 0
+end
+
+% check if axes is hold
+if ~ishold(handles.SW1_axes),hold(handles.SW1_axes);end;
+if ~ishold(handles.SW2_axes),hold(handles.SW2_axes);end;
+if ~ishold(handles.SW3_axes),hold(handles.SW3_axes);end;
+if ~ishold(handles.LW_axes),hold(handles.LW_axes);end;
+
+% plot triggerst
+stem(handles.SW1_axes, time, handles.BGO_Trigger_Flag_Short_1,['.',color])
+stem(handles.SW2_axes, time, handles.BGO_Trigger_Flag_Short_2,['.',color])
+stem(handles.SW3_axes, time, handles.BGO_Trigger_Flag_Short_3,['.',color])
+stem(handles.LW_axes, time, handles.BGO_Trigger_Flag_Long,['.',color])
+
+% axes limits
+xlim(handles.data_axes, [0, max(time)]);
+ylim(handles.SW1_axes, [0,2]);
+ylim(handles.SW2_axes, [0,2]);
+ylim(handles.SW3_axes, [0,2]);
+ylim(handles.LW_axes, [0,2]);
+
+% axes labels
+ylabel(handles.SW1_axes, 'SW1');
+ylabel(handles.SW2_axes, 'SW2');
+ylabel(handles.SW3_axes, 'SW3');
+ylabel(handles.LW_axes, 'LW');
+
+% link axes together
+linkaxes([handles.data_axes,handles.SW1_axes,handles.SW2_axes,handles.SW3_axes,handles.LW_axes],'x');
+
+% report
+DM.messages{end+1} = ['Short Window 1 triggers (total): ', num2str(sum(handles.BGO_Trigger_Flag_Short_1))];
+DM.messages{end+1} = ['Short Window 1 triggers (per hour): ', num2str(round(sum(handles.BGO_Trigger_Flag_Short_1)/range(time)*1e6*3600))];
+DM.messages{end+1} = ['Short Window 2 triggers (total): ', num2str(sum(handles.BGO_Trigger_Flag_Short_2))];
+DM.messages{end+1} = ['Short Window 2 triggers (per hour): ', num2str(round(sum(handles.BGO_Trigger_Flag_Short_2)/range(time)*1e6*3600))];
+DM.messages{end+1} = ['Short Window 3 triggers (total): ', num2str(sum(handles.BGO_Trigger_Flag_Short_3))];
+DM.messages{end+1} = ['Short Window 3 triggers (per hour): ', num2str(round(sum(handles.BGO_Trigger_Flag_Short_3)/range(time)*1e6*3600))];
+DM.messages{end+1} = ['Long Window triggers (total): ', num2str(sum(handles.BGO_Trigger_Flag_Long))];
+DM.messages{end+1} = ['Long Window triggers (per hour): ', num2str(round(sum(handles.BGO_Trigger_Flag_Long)/range(time)*1e6*3600))];
 
 % no errors
 status = 1;
-
-
-% % --- Executes on button press in dm0_checkbox.
-function dm0_checkbox_Callback(hObject, eventdata, handles)
-% pause(0.7);
-% update_button_Callback(hObject, eventdata, handles)
-% 
-% 
-% % --- Executes on button press in dm1_checkbox.
-function dm1_checkbox_Callback(hObject, eventdata, handles)
-% pause(0.7);
-% update_button_Callback(hObject, eventdata, handles)
-% 
-% 
-% % --- Executes on button press in dm2_checkbox.
-function dm2_checkbox_Callback(hObject, eventdata, handles)
-% pause(0.7);
-% update_button_Callback(hObject, eventdata, handles)
 
 % --- Executes on selection change in file_listbox.
 function file_listbox_Callback(hObject, eventdata, handles)
 % clear all axes
 arrayfun(@cla,findall(0,'type','axes'));
-% update
-update_button_Callback(hObject, eventdata, handles)
+% clear info panel
+set(handles.info_textbox,'String','');
 
 
 function init_contextmenu(handles)
@@ -461,7 +547,6 @@ function set_verbosity(hObject,eventdata,handles)
 handles.verbosity = str2double(eventdata.Source.Label);
 % Update handles structure
 guidata(gcf, handles);
-update_button_Callback(hObject, eventdata, handles)
 
 function export_data(~,~,handles)
 assignin('base', 'data', [get(gco,'XData');get(gco,'YData')]');
@@ -472,41 +557,6 @@ x = 0:0.1:5;
 % time decay constant 0.3 mus
 plot(gca,point(1)+x,point(2)*exp(-x/handles.tau),'r');
 
-function [lambda,gof] = plot_time_intervals(handles, edges, counts, time_bin, style)
-    % plot measured interval distribution
-    l = stairs(handles.timing_axes,edges,counts,style);
-    % assign context menu
-    set(l, 'uicontextmenu',handles.hcmenu); 
-    % exponential fit
-    [ft,gof] = fit(edges',counts',[num2str(time_bin),'*lambda*exp(-lambda*x)'],'StartPoint',0);
-    % focus on axes
-    axes(handles.timing_axes);
-    %plot fit
-    plot(ft,['--',style]); legend('off');
-    lambda = ft.lambda;
-    gof = gof.rsquare;
-    
-% scale and labels
-
-set(handles.timing_axes,'XScale','log');
-set(handles.timing_axes,'YScale','log');
-
-xlabel(handles.timing_axes, 'Time intervals [\mus]');
-ylabel(handles.timing_axes, 'Counts');
-
-    
-function plot_energy_spectra(handles, edges, counts, energy_bin, observation_time, style)
-    % plot measured spectra
-    l = stairs(handles.spectra_axes,edges,counts./observation_time,style);
-    % assign context menu    
-    set(l, 'uicontextmenu',handles.hcmenu);
-    
-set(handles.spectra_axes,'YScale','log');
-
-xlabel(handles.spectra_axes, 'Channel');
-ylabel(handles.spectra_axes, 'Counts / channel / sec');
-
-legend(handles.spectra_axes, 'Deposited spectrum');
     
 function [processed_data, DM] = fast_valley_processing(handles,DM, data)
 % Find complete pairs of fast/valley events to correct time, energy and
@@ -558,10 +608,11 @@ if sum(incorrect_energy) && handles.verbosity == 0,
    DM.warnings{end+1} = 'incorrect Fast energy:';
    DM.warnings{end+1} = num2str(round(fasts(incorrect_energy,:)));
 end
+
 % remove all incorrect fasts
-fasts(incorrect_time,:) = NaN;
-fasts(incorrect_energy,:) = NaN;
-fasts(incorrect_valleys,:) = NaN;
+% fasts(incorrect_time,:) = NaN;
+% fasts(incorrect_energy,:) = NaN;
+% fasts(incorrect_valleys,:) = NaN;
 
 processed_data = data;
 % replace with corrected fast events
@@ -569,7 +620,7 @@ processed_data(ind,:) = fasts;
 % remove valleys from the data
 processed_data(ind+1,:) = [];
 
-if sum(isnan(processed_data(:,1))),
+if sum(isnan(processed_data(:,1)))  && handles.verbosity < 2,
     DM.warnings{end+1} = [num2str(sum(isnan(fasts(:,1)))),' Fast SCDPs removed'];
 end
 
@@ -610,4 +661,53 @@ set(handles.info_textbox,'String',current_text);
 
 
 
+function SW1_edit_Callback(hObject, eventdata, handles)
+handles.HED_STW_D_1 = str2double(get(handles.SW1_edit,'String')); %mus, short window 1 duration
+% Update handles structure
+guidata(gcf, handles);
 
+function SW2_edit_Callback(hObject, eventdata, handles)
+handles.HED_STW_D_2 = str2double(get(handles.SW2_edit,'String')); %mus, short window 2 duration
+% Update handles structure
+guidata(gcf, handles);
+
+function SW3_edit_Callback(hObject, eventdata, handles)
+handles.HED_STW_D_3 = str2double(get(handles.SW3_edit,'String')); %mus, short window 3 duration
+% Update handles structure
+guidata(gcf, handles);
+
+function LW_edit_Callback(hObject, eventdata, handles)
+handles.HED_LTW_D = str2double(get(handles.LW_edit,'String')); %mus, long window duration
+% Update handles structure
+guidata(gcf, handles);
+
+
+function STW_THR_L_edit_Callback(hObject, eventdata, handles)
+handles.HED_STW_THR_L = str2double(get(handles.STW_THR_L_edit,'String')); % short time window low energy threshold
+% Update handles structure
+guidata(gcf, handles);
+
+function STW_THR_U_edit_Callback(hObject, eventdata, handles)
+handles.HED_STW_THR_U = str2double(get(handles.STW_THR_U_edit,'String')); % short time window up energy threshold
+% Update handles structure
+guidata(gcf, handles);
+
+function STW_AC_T_edit_Callback(hObject, eventdata, handles)
+handles.HED_STW_AC_T = str2double(get(handles.STW_AC_T_edit,'String')); % short time window accepeted count time
+% Update handles structure
+guidata(gcf, handles);
+
+function LTW_THR_L_edit_Callback(hObject, eventdata, handles)
+handles.HED_LTW_THR_L = str2double(get(handles.LTW_THR_L_edit,'String')); % long time window low energy threshold
+% Update handles structure
+guidata(gcf, handles);
+
+function LTW_THR_U_edit_Callback(hObject, eventdata, handles)
+handles.HED_LTW_THR_U = str2double(get(handles.LTW_THR_U_edit,'String')); % long time window up energy threshold
+% Update handles structure
+guidata(gcf, handles);
+
+function LTW_AC_T_edit_Callback(hObject, eventdata, handles)
+handles.HED_LTW_AC_T = str2double(get(handles.LTW_AC_T_edit,'String')); % long time window accepeted count time
+% Update handles structure
+guidata(gcf, handles);
