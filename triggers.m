@@ -49,6 +49,9 @@ function triggers_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to triggers (see VARARGIN)
 
+% adjust gui size
+adjust_gui(handles);
+
 % get file list
 handles.files = dir('*.dat');
 set(handles.file_listbox,'String',{handles.files.name});
@@ -710,3 +713,11 @@ function LTW_AC_T_edit_Callback(hObject, eventdata, handles)
 handles.HED_LTW_AC_T = str2double(get(handles.LTW_AC_T_edit,'String')); % long time window accepeted count time
 % Update handles structure
 guidata(gcf, handles);
+
+function adjust_gui(handles)
+set(gcf,'Position', [50 0 350 75]);
+set(handles.uipanel4,'Position', [3 49 58 25]);
+set(handles.uipanel6,'Position', [3 28.5 58 20])
+set(handles.uipanel3,'Position', [3 2 58 26])
+set(handles.uipanel2,'Position', [64 47 270 27])
+set(handles.uipanel7,'Position', [64 2 270 44.5])
